@@ -1,14 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-
-const index = () => {
-  return (
-    <View>
-      <Text>index</Text>
-    </View>
-  )
+import React from 'react';
+import MapComponent from '../../components/MapComponent';
+export default function MapScreen() {
+  return <MapComponent />;
 }
-
-export default index
-
-const styles = StyleSheet.create({})

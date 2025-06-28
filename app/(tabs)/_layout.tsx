@@ -8,7 +8,6 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={({ route }): BottomTabNavigationOptions => {
-        // Options de base communes à tous les onglets
         const baseOptions: BottomTabNavigationOptions = {
           tabBarActiveTintColor: '#ff9810',
           headerShown: true,
@@ -44,6 +43,7 @@ export default function TabLayout() {
 
             switch (route.name) {
               case 'index':
+                
                 iconName = 'map-marker-radius';
                 break;
               case 'settings':
@@ -120,7 +120,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="settings" />
-      <Tabs.Screen name="index" />
+      <Tabs.Screen name="index"   options={{ title: 'Accueil' }} />
       <Tabs.Screen name="profile" />
     </Tabs>
   );
