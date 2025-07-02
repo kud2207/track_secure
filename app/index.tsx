@@ -4,6 +4,7 @@ import { View, Image, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PaperProvider } from 'react-native-paper';
 
+
 export default function RootLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
@@ -14,7 +15,7 @@ export default function RootLayout() {
       // Attendre 4 secondes avant de continuer
       setTimeout(() => {
         setIsAuthenticated(!!token);
-      }, 4000);
+      }, 3000);
     };
     checkAuth();
   }, []);

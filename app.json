@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "isMyOwn",
-    "slug": "isMyOwn",
+    "name": "trackSecure",
+    "slug": "trackSecure",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "ismyown",
+    "scheme": "trackSecure",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -22,11 +22,18 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "config":{
+      "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBUCAoEiQ45e-Vhcv3mKOZpfWtAZ2YCZPQ"
         }
-      }
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.anonymous.trackSecure"
     },
     "web": {
       "bundler": "metro",

@@ -1,10 +1,47 @@
 import React from 'react';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform, View, Text, StyleSheet } from 'react-native';
+import { Platform, View, Text, StyleSheet, Alert, ToastAndroid } from 'react-native';
 import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
+import { TouchableOpacity } from 'react-native';
+import { router } from "expo-router";
+import { Avatar } from 'react-native-paper';
 
 export default function TabLayout() {
+
+  //Se deconnecter
+  const signOut = () => {
+    Alert.alert(
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      [
+        {
+          text: 'Annuler',
+          onPress: () => {
+            ToastAndroid.show(
+              'Déconnexion annulée',
+              ToastAndroid.SHORT
+            );
+
+          },
+          style: 'cancel',
+        },
+        {
+          text: 'Déconnexion',
+          onPress: () => {
+            ToastAndroid.show(
+              '🔒 Déconnexion de TrackSecure',
+              ToastAndroid.SHORT
+            );
+
+            router.push('/(auth)/login-in');
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
   return (
     <Tabs
       screenOptions={({ route }): BottomTabNavigationOptions => {
@@ -15,9 +52,11 @@ export default function TabLayout() {
             backgroundColor: '#fff',
             elevation: 0,
             shadowOpacity: 0,
-            borderBottomWidth: 0.5,
+            borderBottomWidth: 1,
             borderBottomColor: '#ccc',
+            height: 80
           },
+
           tabBarInactiveTintColor: '#1c2833',
           tabBarLabelStyle: {
             fontSize: 12,
@@ -25,7 +64,9 @@ export default function TabLayout() {
             marginTop: 2,
           },
           tabBarIconStyle: {
-            marginTop: Platform.OS === 'ios' ? -3 : -6,
+
+            marginTop: 0,
+            alignSelf: 'center',
           },
           tabBarItemStyle: {
             justifyContent: 'center',
@@ -33,17 +74,21 @@ export default function TabLayout() {
             paddingVertical: 6,
           },
           tabBarStyle: {
-            height: 70,
-            paddingBottom: 10,
-            borderTopWidth: 0.3,
-            borderTopColor: '#ccc',
+            height: 60,
+            paddingBottom: Platform.OS === 'android' ? 6 : 10,
+            borderTopWidth: 1,
+            backgroundColor: '#fff',
+            shadowColor: 'transparent',
+            shadowOpacity: 0,
           },
+
+
           tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => {
             let iconName: keyof typeof MaterialCommunityIcons.glyphMap;
 
             switch (route.name) {
               case 'index':
-                
+
                 iconName = 'map-marker-radius';
                 break;
               case 'settings':
@@ -59,10 +104,10 @@ export default function TabLayout() {
             return (
               <MaterialCommunityIcons
                 name={iconName}
-                size={focused ? 40 : 26}
+                size={focused ? 30 : 24}
                 color={color}
                 style={{
-                  transform: [{ translateY: focused ? -10 : 0 }],
+                  transform: [{ translateY: focused ? -7 : 0 }],
                 }}
               />
             );
@@ -77,12 +122,13 @@ export default function TabLayout() {
               <View style={styles.headerContainer}>
                 <Text style={[styles.headerText, { color: '#3498db' }]}>Track</Text>
                 <Text style={[styles.headerText, { color: '#ff9810' }]}>Secure</Text>
+                <Avatar.Image size={50} source={require('../../assets/images/icon.png')} />
               </View>
             ),
             headerRight: () => (
               <MaterialIcons
                 name="info-outline"
-                size={24}
+                size={28}
                 color="#1c2833"
                 style={{ marginRight: 15 }}
               />
@@ -95,7 +141,7 @@ export default function TabLayout() {
             headerRight: () => (
               <MaterialCommunityIcons
                 name="car-wrench"
-                size={24}
+                size={28}
                 color="#1c2833"
                 style={{ marginRight: 15 }}
               />
@@ -104,14 +150,30 @@ export default function TabLayout() {
         } else if (route.name === 'profile') {
           return {
             ...baseOptions,
-            title: 'Profil',  
+            title: 'Profile',
+
+            headerTitle: () => (
+              <View style={styles.headerContainer}>
+                <Avatar.Text size={35} label="KU" labelStyle={{ color: 'white', fontWeight: 'bold' }}
+                  style={{ backgroundColor: '#ff9810' }} />
+                <Text style={[styles.headerText, { color: '', marginLeft: 10 }]}>kageu</Text>
+                <Text style={[styles.headerText, { color: '', marginLeft: 0 }]}>ulrich</Text>
+              </View>
+            ),
             headerRight: () => (
-              <MaterialCommunityIcons
-                name="account-lock-open-outline"
-                size={24}
-                color="#1c2833"
+              <TouchableOpacity
+                onPress={() => {
+                  signOut()
+                }}
                 style={{ marginRight: 15 }}
-              />
+              >
+                <MaterialIcons
+                  name="logout"
+                  size={28}
+                  color="#e74c3c"
+                />
+              </TouchableOpacity>
+
             ),
           };
         }
@@ -120,7 +182,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="settings" />
-      <Tabs.Screen name="index"   options={{ title: 'Accueil' }} />
+      <Tabs.Screen name="index" options={{ title: 'Accueil' }} />
       <Tabs.Screen name="profile" />
     </Tabs>
   );

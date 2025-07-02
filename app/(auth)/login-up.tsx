@@ -19,11 +19,14 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { router } from "expo-router";
+import { supabase } from "@/utils/supabase";
 
-const Register = ({  }) => {
+
+const Register = ({ }) => {
   const [formData, setFormData] = useState({
     numeroTelephone: "",
     nom: "",
+    prenom: "",
     sexe: "",
     motDePasse: "",
     confirmerMotDePasse: "",
@@ -32,6 +35,7 @@ const Register = ({  }) => {
   const [errors, setErrors] = useState({
     numeroTelephone: false,
     nom: false,
+    prenom: false,
     sexe: false,
     motDePasse: false,
     confirmerMotDePasse: false,
@@ -42,13 +46,13 @@ const Register = ({  }) => {
   const [visible, setVisible] = useState(false);
   const [errorAf, setErrorAf] = useState("");
 
-  const handleChange = (field:any, value:any) => {
+  const handleChange = (field: any, value: any) => {
     setFormData({ ...formData, [field]: value });
     setErrors({ ...errors, [field]: false });
     setErrorAf("");
   };
 
-  const validateField = (field:any, value:any) => {
+  const validateField = (field: any, value: any) => {
     setErrors((prev) => ({ ...prev, [field]: value.trim() === "" }));
   };
 
@@ -74,10 +78,31 @@ const Register = ({  }) => {
     setErrorAf("");
   };
 
-  const confirmRegister = () => {
-    alert("Inscription confirmée !");
-    hideDialog();
+  const confirmRegister = async () => {
+    const { numeroTelephone, nom, prenom, sexe, motDePasse } = formData;
+  
+    const { data, error } = await supabase
+      .from("proprietaire_vehicule")
+      .insert([
+        {
+          numero_tel: numeroTelephone.trim(),
+          nom: nom.trim(),
+          prenom: prenom.trim(),
+          sexe: sexe.trim(),
+          password: motDePasse.trim(),
+        }
+      ]);
+  
+    if (error) {
+      console.log(error);
+      setErrorAf("Erreur lors de l'enregistrement.");
+      return;
+    }
+  
+    // Redirection vers la page de connexion
+    router.push("/(auth)/login-in");
   };
+  
 
   return (
     <View style={styles.container}>
@@ -141,6 +166,20 @@ const Register = ({  }) => {
               style={styles.input}
               mode="outlined"
               error={errors.nom}
+              left={<TextInput.Icon icon="account" />}
+            />
+          </Animated.View>
+
+          {/* PreNom */}
+          <Animated.View entering={FadeInDown.duration(700).springify()} style={styles.inputContainer}>
+            <TextInput
+              label="Prénom"
+              value={formData.prenom}
+              onChangeText={(value) => handleChange("prenom", value)}
+              onBlur={() => validateField("prenom", formData.prenom)}
+              style={styles.input}
+              mode="outlined"
+              error={errors.prenom}
               left={<TextInput.Icon icon="account" />}
             />
           </Animated.View>
@@ -274,6 +313,10 @@ const Register = ({  }) => {
                   <Text>{formData.nom}</Text>
                 </View>
                 <View style={styles.contenaireData}>
+                  <Text style={styles.labelText}>PreNom :</Text>
+                  <Text>{formData.prenom}</Text>
+                </View>
+                <View style={styles.contenaireData}>
                   <Text style={styles.labelText}>Sexe :</Text>
                   <Text>{formData.sexe}</Text>
                 </View>
@@ -291,9 +334,9 @@ const Register = ({  }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    alignItems: "center" 
+  container: {
+    flex: 1,
+    alignItems: "center"
   },
   scrollContent: {
     paddingBottom: 20,
@@ -301,8 +344,8 @@ const styles = StyleSheet.create({
   imageBG: {
     position: "absolute",
     width: "100%",
-    height: "80%", // Réduit la hauteur de l'image de fond
-    top: 0, // Ajusté pour monter l'image
+    height: "80%", 
+    top: 0, 
   },
   contentContainer: {
     flex: 1,
@@ -311,31 +354,30 @@ const styles = StyleSheet.create({
   contenaireImg: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginHorizontal: 30,
-    marginTop:-70, // Espace réduit en haut
+    marginHorizontal: 50,
+    marginTop: -20, 
   },
-  imgTOP1: { 
-    width: 120, // Taille réduite
-    height: 120, 
-    marginTop: -10 // Remonté
-  },
-  imgTOP2: { 
+  imgTOP1: {
     width: 120, 
+    height: 120,
+    marginTop: -10 
+  },
+  imgTOP2: {
+    width: 120,
     height: 120,
     marginTop: -10
   },
   contenaireForm: {
-    flex: 1,
     alignItems: "center",
-    marginTop: 0, // Supprimé l'espace en haut
-    paddingHorizontal: 20,
+    marginTop: 0, 
+    paddingHorizontal: 0,
   },
   contenaireLOGIN: {
     alignItems: "center",
-    marginBottom: 10, // Espace réduit
+    marginBottom: 10, 
   },
   loginICON: {
-    width: 60, // Taille réduite
+    width: 60,
     height: 60,
     borderRadius: 30,
     justifyContent: "center",
@@ -343,11 +385,11 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: "100%",
-    marginVertical: 5, // Espace réduit entre les inputs
+    marginVertical: 5, 
   },
   input: {
     width: "100%",
-    height: 50, // Hauteur réduite
+    height: 50, 
   },
   radioContainer: {
     flexDirection: "row",
@@ -357,7 +399,7 @@ const styles = StyleSheet.create({
   connectWithContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 10, // Espace réduit
+    marginVertical: 10, 
     width: "100%",
   },
   horizontalLine: {
@@ -369,15 +411,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     fontWeight: "bold",
     color: "#555",
-    fontSize: 12, // Taille réduite
+    fontSize: 12, 
   },
   socialIconsContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 10, // Espace réduit
+    marginBottom: 10, 
   },
   socialButton: {
-    width: 50, // Taille réduite
+    width: 50, 
     height: 50,
     borderRadius: 25,
     justifyContent: "center",
@@ -385,26 +427,26 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   button: {
-    marginTop: 5, // Espace réduit
+    marginTop: 5, 
     width: "100%",
     backgroundColor: "#ff9810",
-    height: 45, // Hauteur réduite
+    height: 45,
   },
   errorText: {
     color: "red",
     textAlign: "center",
     marginTop: 5,
     minHeight: 20,
-    fontSize: 12, // Taille réduite
+    fontSize: 12, 
   },
   contenaireData: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 2, // Espace réduit
+    marginVertical: 2, 
   },
   labelText: {
     fontWeight: "bold",
-    fontSize: 12, // Taille réduite
+    fontSize: 12, 
   },
 });
 
