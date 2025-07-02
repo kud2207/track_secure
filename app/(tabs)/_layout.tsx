@@ -1,7 +1,7 @@
 import React from 'react';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform, View, Text, StyleSheet, Alert, ToastAndroid } from 'react-native';
+import { Platform, View, Text, StyleSheet, Alert, ToastAndroid, StatusBar } from 'react-native';
 import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { TouchableOpacity } from 'react-native';
 import { router } from "expo-router";
@@ -122,7 +122,7 @@ export default function TabLayout() {
               <View style={styles.headerContainer}>
                 <Text style={[styles.headerText, { color: '#3498db' }]}>Track</Text>
                 <Text style={[styles.headerText, { color: '#ff9810' }]}>Secure</Text>
-                <Avatar.Image size={50} source={require('../../assets/images/icon.png')} />
+                <Avatar.Image size={45} source={require('../../assets/images/icon.png')} />
               </View>
             ),
             headerRight: () => (
@@ -181,6 +181,7 @@ export default function TabLayout() {
         return baseOptions;
       }}
     >
+       <StatusBar barStyle="light-content" />
       <Tabs.Screen name="settings" />
       <Tabs.Screen name="index" options={{ title: 'Accueil' }} />
       <Tabs.Screen name="profile" />

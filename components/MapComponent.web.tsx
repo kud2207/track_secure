@@ -5,7 +5,7 @@ export default function MapComponent() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
-        🌐 La carte n'est pas disponible sur le Web avec react-native-maps.
+        La carte n'est pas disponible sur le Web avec react-native-maps.
       </Text>
     </View>
   );
