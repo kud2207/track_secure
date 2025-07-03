@@ -6,11 +6,25 @@ import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { TouchableOpacity } from 'react-native';
 import { router } from "expo-router";
 import { Avatar } from 'react-native-paper';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
+
 
 export default function TabLayout() {
+  const [user, setUser] = useState<{ nom: string; prenom: string } | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userData = await AsyncStorage.getItem('userInfo');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    };
+    fetchUser();
+  }, []);
 
   //Se deconnecter
-  const signOut = () => {
+  const signOut =  () => {
     Alert.alert(
       'Déconnexion',
       'Êtes-vous sûr de vouloir vous déconnecter ?',
@@ -28,13 +42,14 @@ export default function TabLayout() {
         },
         {
           text: 'Déconnexion',
-          onPress: () => {
+          onPress: async() => {
             ToastAndroid.show(
               '🔒 Déconnexion de TrackSecure',
               ToastAndroid.SHORT
             );
 
             router.push('/(auth)/login-in');
+            await AsyncStorage.removeItem('userInfo');
           },
           style: 'destructive',
         },
@@ -148,16 +163,22 @@ export default function TabLayout() {
             ),
           };
         } else if (route.name === 'profile') {
+          const initiales = user
+          ? `${user.prenom?.charAt(0) ?? ''}${user.nom?.charAt(0) ?? ''}`.toUpperCase()
+          : '👤';
           return {
             ...baseOptions,
             title: 'Profile',
-
             headerTitle: () => (
               <View style={styles.headerContainer}>
-                <Avatar.Text size={35} label="KU" labelStyle={{ color: 'white', fontWeight: 'bold' }}
-                  style={{ backgroundColor: '#ff9810' }} />
-                <Text style={[styles.headerText, { color: '', marginLeft: 10 }]}>kageu</Text>
-                <Text style={[styles.headerText, { color: '', marginLeft: 0 }]}>ulrich</Text>
+                <Avatar.Text
+                  size={35}
+                  label={initiales}
+                  labelStyle={{ color: 'white', fontWeight: 'bold' }}
+                  style={{ backgroundColor: '#ff9810' }}
+                />
+                <Text style={[styles.headerText, { marginLeft: 10 }]}>{user?.nom ?? ''}</Text>
+                <Text style={[styles.headerText, { marginLeft: 0 }]}>{user?.prenom ?? ''}</Text>
               </View>
             ),
             headerRight: () => (

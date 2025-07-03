@@ -15,6 +15,9 @@ import {
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { supabase } from "@/utils/supabase";
+import { ToastAndroid } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginIn: React.FC = () => {
   const [formData, setFormData] = useState({ phoneNumber: "", password: "" });
@@ -25,13 +28,39 @@ const LoginIn: React.FC = () => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleLogin = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      router.push("/(tabs)"); 
-    }, 3000);
-  };
+  const handleLogin = async () => {
+    const { phoneNumber, password } = formData;
 
+    if (!phoneNumber || !password) {
+      ToastAndroid.show("Veuillez remplir tous les champs.", ToastAndroid.SHORT);
+      return;
+    }
+
+    setIsLoading(true);
+
+    const { data, error } = await supabase
+      .from("proprietaire_vehicule")
+      .select("*")
+      .eq("numero_tel", phoneNumber.trim())
+      .eq("password", password.trim())
+      .single();
+
+    if (error || !data) {
+      setIsLoading(false);
+      ToastAndroid.show("Téléphone ou mot de passe incorrect.", ToastAndroid.SHORT);
+      return;
+    }
+    // Sauvegarde dans AsyncStorage
+    await AsyncStorage.setItem('userInfo', JSON.stringify({
+      nom: data.nom,
+      prenom: data.prenom,
+    }));
+
+    // Connexion réussie
+    ToastAndroid.show(`Bienvenue ${data.prenom || ""} 👋`, ToastAndroid.SHORT);
+    setIsLoading(false);
+    router.push("/(tabs)");
+  };
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
