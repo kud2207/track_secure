@@ -12,6 +12,11 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [vehiculeExiste, setVehiculeExiste] = useState(false);
+  const [vehiculeData, setVehiculeData] = useState({ immatriculation: '', marque: '', couleur: '' });
+  const [vehiculeInfo, setVehiculeInfo] = useState<any>(null);
+  const [vehiculeEditMode, setVehiculeEditMode] = useState<{ [key: string]: boolean }>({});
+
   const fetchUserData = async () => {
     try {
       setLoading(true);
@@ -31,7 +36,7 @@ const Profile = () => {
         setUserData(null);
       } else {
         setUserData(data);
-        setEditedData(data); // Initialise les champs modifiables
+        setEditedData(data);
       }
     } catch (err) {
       console.error('Erreur récupération:', err);
@@ -41,9 +46,32 @@ const Profile = () => {
     }
   };
 
+  const fetchVehicule = async () => {
+    const { numero_tel } = userData || {};
+    if (!numero_tel) return;
+
+    const { data, error } = await supabase
+      .from('vehicule')
+      .select('*')
+      .eq('proprietaire_vehicule_numero', numero_tel)
+      .single();
+
+    if (data) {
+      setVehiculeExiste(true);
+      setVehiculeInfo(data);
+    } else {
+      setVehiculeExiste(false);
+      setVehiculeInfo(null);
+    }
+  };
+
   useEffect(() => {
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    if (userData) fetchVehicule();
+  }, [userData]);
 
   const handleEdit = (field: string) => {
     setEditMode({ ...editMode, [field]: true });
@@ -63,6 +91,43 @@ const Profile = () => {
     } else {
       setUserData({ ...userData, ...updates });
       setEditMode({ ...editMode, [field]: false });
+    }
+  };
+
+  const handleAddVehicule = async () => {
+    if (!vehiculeData.immatriculation || !vehiculeData.marque || !vehiculeData.couleur) {
+      Alert.alert("Erreur", "Veuillez remplir tous les champs du véhicule.");
+      return;
+    }
+
+    const { numero_tel } = userData;
+
+    const { error } = await supabase.from('vehicule').insert({
+      ...vehiculeData,
+      proprietaire_vehicule_numero: numero_tel,
+    });
+
+    if (error) {
+      Alert.alert("Erreur lors de l'ajout du véhicule", error.message);
+    } else {
+      Alert.alert("Succès", "Véhicule ajouté avec succès !");
+      setVehiculeData({ immatriculation: '', marque: '', couleur: '' });
+      fetchVehicule();
+    }
+  };
+
+  const handleConfirmVehicule = async (field: string) => {
+    const updates = { [field]: vehiculeInfo[field] };
+
+    const { error } = await supabase
+      .from('vehicule')
+      .update(updates)
+      .eq('id', vehiculeInfo.id);
+
+    if (error) {
+      Alert.alert("Erreur", error.message);
+    } else {
+      setVehiculeEditMode({ ...vehiculeEditMode, [field]: false });
     }
   };
 
@@ -109,7 +174,44 @@ const Profile = () => {
         <EditableInfo label="Ville" field="ville_residence" />
         <EditableInfo label="Quartier" field="quartier_residence" />
         <EditableInfo label="Pays" field="pays_residence" />
+      </View>
 
+    {/*partie vehicule*/}
+      <Avatar.Icon icon="car" size={80} style={styles.avatar} />
+      <View style={styles.card}>
+        <Text style={styles.title}>Véhicule</Text>
+
+        {vehiculeExiste ? (
+          <>
+            <EditableVehiculeInfo label="Immatricul" field="immatriculation" />
+            <EditableVehiculeInfo label="Marque" field="marque" />
+            <EditableVehiculeInfo label="Couleur" field="couleur" />
+          </>
+        ) : (
+          <>
+            <TextInput
+              placeholder="Immatriculation"
+              value={vehiculeData.immatriculation}
+              onChangeText={(text) => setVehiculeData({ ...vehiculeData, immatriculation: text })}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Marque"
+              value={vehiculeData.marque}
+              onChangeText={(text) => setVehiculeData({ ...vehiculeData, marque: text })}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Couleur"
+              value={vehiculeData.couleur}
+              onChangeText={(text) => setVehiculeData({ ...vehiculeData, couleur: text })}
+              style={styles.input}
+            />
+            <Button mode="contained" onPress={handleAddVehicule} style={{ marginTop: 10 }}>
+              Ajouter le véhicule
+            </Button>
+          </>
+        )}
       </View>
     </ScrollView>
   );
@@ -126,15 +228,44 @@ const Profile = () => {
               onChangeText={(text) => setEditedData({ ...editedData, [field]: text })}
             />
             <Button mode="text" onPress={() => handleConfirm(field)}>
-            <FontAwesome name="check" size={20} color="green" />
+              <FontAwesome name="check" size={20} color="green" />
             </Button>
           </>
         ) : (
           <>
             <Text style={styles.infoValue}>{userData[field] || '-'}</Text>
-            {editable && <Button mode="text" onPress={() => handleEdit(field)}>           
-              <FontAwesome name="edit" size={20} color=""style={{left:10}} />
-              </Button>}
+            {editable && (
+              <Button mode="text" onPress={() => handleEdit(field)}>
+                <FontAwesome name="edit" size={20} style={{ left: 10 }} />
+              </Button>
+            )}
+          </>
+        )}
+      </View>
+    );
+  }
+
+  function EditableVehiculeInfo({ label, field }: { label: string; field: string }) {
+    return (
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel} numberOfLines={1} ellipsizeMode="tail">{label} :</Text>
+        {vehiculeEditMode[field] ? (
+          <>
+            <TextInput
+              style={styles.input}
+              value={vehiculeInfo[field] || ''}
+              onChangeText={(text) => setVehiculeInfo({ ...vehiculeInfo, [field]: text })}
+            />
+            <Button mode="text" onPress={() => handleConfirmVehicule(field)}>
+              <FontAwesome name="check" size={20} color="green" />
+            </Button>
+          </>
+        ) : (
+          <>
+            <Text style={styles.infoValue}>{vehiculeInfo[field] || '-'}</Text>
+            <Button mode="text" onPress={() => setVehiculeEditMode({ ...vehiculeEditMode, [field]: true })}>
+              <FontAwesome name="edit" size={20} />
+            </Button>
           </>
         )}
       </View>
@@ -157,7 +288,7 @@ const styles = StyleSheet.create({
   avatar: {
     backgroundColor: '#ff9810',
     marginBottom: -20,
-    zIndex:2
+    zIndex: 2,
   },
   card: {
     width: '100%',
@@ -166,6 +297,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     padding: 20,
     backgroundColor: '#fff',
+    marginBottom: 20,
   },
   title: {
     fontSize: 18,
@@ -179,6 +311,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: -4,
+    gap: 0
   },
   infoLabel: {
     fontWeight: 'bold',
@@ -195,4 +328,15 @@ const styles = StyleSheet.create({
     flex: 2,
     marginHorizontal: 10,
   },
+  vehicleAvatar: {
+    backgroundColor: '#ff9810',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+
 });
