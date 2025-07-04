@@ -24,7 +24,7 @@ export default function TabLayout() {
   }, []);
 
   //Se deconnecter
-  const signOut =  () => {
+  const signOut = () => {
     Alert.alert(
       'Déconnexion',
       'Êtes-vous sûr de vouloir vous déconnecter ?',
@@ -42,9 +42,9 @@ export default function TabLayout() {
         },
         {
           text: 'Déconnexion',
-          onPress: async() => {
+          onPress: async () => {
             ToastAndroid.show(
-              '🔒 Déconnexion de TrackSecure',
+              'Déconnexion de TrackSecure',
               ToastAndroid.SHORT
             );
 
@@ -164,8 +164,8 @@ export default function TabLayout() {
           };
         } else if (route.name === 'profile') {
           const initiales = user
-          ? `${user.prenom?.charAt(0) ?? ''}${user.nom?.charAt(0) ?? ''}`.toUpperCase()
-          : '👤';
+            ? `${user.prenom?.charAt(0) ?? ''}${user.nom?.charAt(0) ?? ''}`.toUpperCase()
+            : '👤';
           return {
             ...baseOptions,
             title: 'Profile',
@@ -202,7 +202,7 @@ export default function TabLayout() {
         return baseOptions;
       }}
     >
-       <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" />
       <Tabs.Screen name="settings" />
       <Tabs.Screen name="index" options={{ title: 'Accueil' }} />
       <Tabs.Screen name="profile" />

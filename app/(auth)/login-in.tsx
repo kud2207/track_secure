@@ -54,10 +54,12 @@ const LoginIn: React.FC = () => {
     await AsyncStorage.setItem('userInfo', JSON.stringify({
       nom: data.nom,
       prenom: data.prenom,
+      numero_tel: data.numero_tel
     }));
 
+
     // Connexion réussie
-    ToastAndroid.show(`Bienvenue ${data.prenom || ""} 👋`, ToastAndroid.SHORT);
+    ToastAndroid.show(`Bienvenue ${data.prenom || ""}`, ToastAndroid.SHORT);
     setIsLoading(false);
     router.push("/(tabs)");
   };
