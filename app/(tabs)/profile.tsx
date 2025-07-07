@@ -223,9 +223,10 @@ const Profile = () => {
         {editMode[field] && editable ? (
           <>
             <TextInput
-              style={styles.input}
+              style={[styles.input]}
               value={editedData[field] || ''}
               onChangeText={(text) => setEditedData({ ...editedData, [field]: text })}
+              
             />
             <Button mode="text" onPress={() => handleConfirm(field)}>
               <FontAwesome name="check" size={20} color="green" />
@@ -255,6 +256,7 @@ const Profile = () => {
               style={styles.input}
               value={vehiculeInfo[field] || ''}
               onChangeText={(text) => setVehiculeInfo({ ...vehiculeInfo, [field]: text })}
+              
             />
             <Button mode="text" onPress={() => handleConfirmVehicule(field)}>
               <FontAwesome name="check" size={20} color="green" />
@@ -292,7 +294,9 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    borderRadius: 12,
+    borderTopRightRadius:30,
+    borderTopLeftRadius:30,
+    borderRadius:8,
     borderWidth: 1,
     borderColor: '#ddd',
     padding: 20,

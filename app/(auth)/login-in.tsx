@@ -93,7 +93,7 @@ const LoginIn: React.FC = () => {
             <TouchableOpacity style={[styles.loginICON, { backgroundColor: "#3b5998" }]}>
               <FontAwesome name="user" size={35} color="#fff" />
             </TouchableOpacity>
-            <Text style={styles.welcomeText}>Bienvenue, Chef !</Text>
+            <Text style={styles.welcomeText}>Welcom To TackSecure !</Text>
           </View>
 
           <Animated.View entering={FadeInDown.duration(700).springify()} style={styles.inputContainer}>
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: "white",
     textAlign: "center",
-    fontWeight: "bold",
+    fontWeight: "900",
   },
   inputContainer: {
     flexDirection: "row",

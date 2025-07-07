@@ -20,8 +20,9 @@
     "@react-navigation/native": "^7.1.6",
     "@supabase/supabase-js": "^2.50.0",
     "expo": "~53.0.7",
+    "expo-camera": "~16.1.7",
     "expo-font": "~13.3.1",
-    "expo-image-picker": "^16.1.4",
+    "expo-image-picker": "~16.1.4",
     "expo-linking": "~7.1.4",
     "expo-location": "~18.1.5",
     "expo-maps": "~0.11.0",
@@ -41,7 +42,8 @@
     "react-native-toast-message": "^2.3.3",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-web": "~0.20.0"
+    "react-native-web": "~0.20.0",
+    "expo-document-picker": "~13.1.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
