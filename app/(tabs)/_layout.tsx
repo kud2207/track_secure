@@ -221,7 +221,7 @@ export default function TabLayout() {
             <Text>👤 {user?.prenom} {user?.nom}</Text>
             <Text>📧 {user?.email ?? 'Email non défini'}</Text>
             <View style={styles.divider} />
-            <Text>🚗 Matricule : {vehicule?.immatriculation ?? 'N/A'}</Text>
+            <Text>Matricule : {vehicule?.immatriculation ?? 'N/A'}</Text>
             <Text>Marque : {vehicule?.marque ?? 'N/A'}</Text>
             <Text>Couleur : {vehicule?.couleur ?? 'N/A'}</Text>
           </Dialog.Content>
