@@ -1,4 +1,3 @@
-// MapComponent.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import {
   StyleSheet,
@@ -8,7 +7,6 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  TextInput,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -22,7 +20,6 @@ export default function MapComponent() {
   const [vehicule, setVehicule] = useState<any>(null);
   const [isBuzzerOn, setIsBuzzerOn] = useState(false);
   const [espIp, setEspIp] = useState<string | null>(null);
-  const [inputIp, setInputIp] = useState<string>('http://192.168.137.200');
 
   const mapRef = useRef<MapView | null>(null);
 
@@ -42,10 +39,7 @@ export default function MapComponent() {
       }
 
       const ip = await AsyncStorage.getItem('esp32_ip');
-      if (ip) {
-        setEspIp(ip);
-        setInputIp(ip);
-      }
+      if (ip) setEspIp(ip);
     })();
   }, []);
 
@@ -78,16 +72,6 @@ export default function MapComponent() {
       );
     })();
   }, []);
-
-  const saveIp = async () => {
-    if (!inputIp.trim()) {
-      Alert.alert("Erreur", "L'adresse IP ne peut pas être vide.");
-      return;
-    }
-    await AsyncStorage.setItem('esp32_ip', inputIp.trim());
-    setEspIp(inputIp.trim());
-    Alert.alert('Succès', 'IP ESP32 sauvegardée');
-  };
 
   const toggleBuzzer = async () => {
     const action = isBuzzerOn ? 'off' : 'on';
@@ -123,21 +107,6 @@ export default function MapComponent() {
 
   return (
     <View style={styles.container}>
-      {/* Saisie IP */}
-      <View style={styles.ipInputContainer}>
-        <TextInput
-          style={styles.ipInput}
-          placeholder="IP ESP32 (ex: http://192.168.137.200)"
-          value={inputIp}
-          onChangeText={setInputIp}
-          autoCapitalize="none"
-          keyboardType="url"
-        />
-        <TouchableOpacity style={styles.saveIpButton} onPress={saveIp}>
-          <Text style={styles.saveIpButtonText}>Sauvegarder IP</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Info utilisateur */}
       <View style={styles.topInfo}>
         <Text style={styles.name}>
@@ -148,12 +117,6 @@ export default function MapComponent() {
           <Text style={styles.couleur}>{vehicule?.couleur || ''}</Text>
         </View>
       </View>
-
-      {espIp && (
-        <View style={styles.espIpContainer}>
-          <Text style={styles.espIpText}>ESP32 IP: {espIp}</Text>
-        </View>
-      )}
 
       {/* Carte */}
       <MapView
@@ -197,34 +160,9 @@ export default function MapComponent() {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  ipInputContainer: {
-    padding: 10,
-    backgroundColor: '#222',
-    margin: 10,
-    borderRadius: 8,
-    zIndex: 20,
-  },
-  ipInput: {
-    backgroundColor: 'white',
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 8,
-    fontSize: 16,
-  },
-  saveIpButton: {
-    backgroundColor: '#4caf50',
-    padding: 10,
-    borderRadius: 6,
-  },
-  saveIpButtonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: 'bold',
   },
   map: {
     width: Dimensions.get('window').width,
@@ -272,20 +210,6 @@ const styles = StyleSheet.create({
     padding: 3,
     borderRadius: 6,
     marginTop: 2,
-  },
-  espIpContainer: {
-    position: 'absolute',
-    top: 10,
-    left: 20,
-    backgroundColor: '#00000080',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    zIndex: 20,
-  },
-  espIpText: {
-    color: 'white',
-    fontWeight: 'bold',
   },
   bottomActions: {
     position: 'absolute',
