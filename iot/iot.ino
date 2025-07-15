@@ -1,27 +1,52 @@
 #include <WiFi.h>
+#include <TinyGPSPlus.h>
 #include <WebServer.h>
 
-const char* ssid = "-YDS_v2-";       // Réseau Wi-Fi existant
-const char* password = "00000000";   // Mot de passe du Wi-Fi
+// === Wi-Fi ===
+const char* ssid = "QWERTY";
+const char* password = "1234567890";
 
+// IP fixe
+IPAddress local_ip(192, 168, 137, 200);
+IPAddress gateway(192, 168, 137, 1);
+IPAddress subnet(255, 255, 255, 0);
+
+// === GPS (UART2) ===
+#define RXD2 16
+#define TXD2 17
+#define GPSBaud 9600
+TinyGPSPlus gps;
+HardwareSerial neogps(2);
+
+// === Buzzer ===
 const int buzzerPin = 12;
-WebServer server(80);
 
-// Adresse IP fixe pour l’ESP32 dans le réseau local
-IPAddress local_ip(192, 168, 184, 100);   // Doit être libre dans le réseau
-IPAddress gateway(192, 168, 184, 1);      // Passerelle (généralement .1)
-IPAddress subnet(255, 255, 255, 0);       // Masque
+// === Serveur HTTP ===
+WebServer server(80);
 
 void handleOn() {
   digitalWrite(buzzerPin, HIGH);
   server.send(200, "text/plain", "Buzzer ON");
-  Serial.println("Buzzer ON via HTTP");
 }
 
 void handleOff() {
   digitalWrite(buzzerPin, LOW);
   server.send(200, "text/plain", "Buzzer OFF");
-  Serial.println("Buzzer OFF via HTTP");
+}
+
+void handleGPS() {
+  String response;
+  if (gps.location.isValid()) {
+    response = "{";
+    response += "\"lat\":" + String(gps.location.lat(), 6) + ",";
+    response += "\"lon\":" + String(gps.location.lng(), 6) + ",";
+    response += "\"alt\":" + String(gps.altitude.meters(), 2);
+    response += "}";
+  } else {
+    response = "{\"message\":\"Pas de fix GPS\"}";
+  }
+
+  server.send(200, "application/json", response);
 }
 
 void setup() {
@@ -29,29 +54,32 @@ void setup() {
   pinMode(buzzerPin, OUTPUT);
   digitalWrite(buzzerPin, LOW);
 
-  // Configurer l’IP fixe avant de se connecter
+  neogps.begin(GPSBaud, SERIAL_8N1, RXD2, TXD2);
   WiFi.config(local_ip, gateway, subnet);
-
-  Serial.println("Connexion au Wi-Fi...");
   WiFi.begin(ssid, password);
 
-  // Attente de connexion
+  Serial.print("Connexion Wi-Fi...");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-
-  Serial.println("\n✅ Connecté au Wi-Fi !");
-  Serial.print("Adresse IP : ");
+  Serial.println("\n✅ Wi-Fi connecté !");
   Serial.println(WiFi.localIP());
 
-  // Démarrage du serveur HTTP
+  // Routes HTTP
   server.on("/on", handleOn);
   server.on("/off", handleOff);
+  server.on("/gps", handleGPS);
+
   server.begin();
-  Serial.println("Serveur HTTP lancé.");
 }
 
 void loop() {
+  // Lire les trames GPS
+  while (neogps.available()) {
+    gps.encode(neogps.read());
+  }
+
+  // Traiter les requêtes
   server.handleClient();
 }

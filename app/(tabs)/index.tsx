@@ -21,6 +21,32 @@ export default function MapComponent() {
   const [isBuzzerOn, setIsBuzzerOn] = useState(false);
   const [espIp, setEspIp] = useState<string | null>(null);
 
+  //gps
+  const [espLocation, setEspLocation] = useState<{ latitude: number; longitude: number } | null>(null); //gps
+  useEffect(() => {
+    if (!espIp) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const url = espIp.startsWith('http') ? `${espIp}/gps` : `http://${espIp}/gps`;
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (json?.lat && json?.lon) {
+          setEspLocation({
+            latitude: json.lat,
+            longitude: json.lon,
+          });
+        }
+      } catch (error) {
+        console.warn("Impossible d'obtenir la position de l'ESP32.");
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [espIp]);
+
+
   const mapRef = useRef<MapView | null>(null);
 
   useEffect(() => {
@@ -135,6 +161,15 @@ export default function MapComponent() {
           description="Position actuelle"
           pinColor="blue"
         />
+        {espLocation && (
+          <Marker
+            coordinate={espLocation}
+            title="ESP32"
+            description="Position du véhicule"
+            pinColor="red"
+          />
+        )}
+
       </MapView>
 
       {/* Boutons */}

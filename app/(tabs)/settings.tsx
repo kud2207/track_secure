@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Settings() {
   const [tab, setTab] = useState<'reglages' | 'utilisateur'>('reglages');
-  const [espIp, setEspIp] = useState('');
+  const [espIp, setEspIp] = useState('http://192.168.137.200');
   const [distance, setDistance] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [userData, setUserData] = useState<any>(null);
@@ -38,6 +38,7 @@ export default function Settings() {
     await AsyncStorage.setItem('notifications', notificationsEnabled.toString());
     Alert.alert('Succès', 'Paramètres enregistrés');
   };
+
 
   return (
     <View style={styles.container}>
