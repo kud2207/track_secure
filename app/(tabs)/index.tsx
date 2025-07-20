@@ -13,6 +13,10 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FontAwesome } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
+import { Modal, Pressable, Linking, Vibration } from 'react-native';
+const vibrationInterval = useRef<NodeJS.Timer | null>(null);
+
+
 
 export default function MapComponent() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -21,33 +25,24 @@ export default function MapComponent() {
   const [isBuzzerOn, setIsBuzzerOn] = useState(false);
   const [espIp, setEspIp] = useState<string | null>(null);
 
-  //gps
-  const [espLocation, setEspLocation] = useState<{ latitude: number; longitude: number } | null>(null); //gps
-  useEffect(() => {
-    if (!espIp) return;
-
-    const interval = setInterval(async () => {
-      try {
-        const url = espIp.startsWith('http') ? `${espIp}/gps` : `http://${espIp}/gps`;
-        const res = await fetch(url);
-        const json = await res.json();
-
-        if (json?.lat && json?.lon) {
-          setEspLocation({
-            latitude: json.lat,
-            longitude: json.lon,
-          });
-        }
-      } catch (error) {
-        console.warn("Impossible d'obtenir la position de l'ESP32.");
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [espIp]);
-
-
   const mapRef = useRef<MapView | null>(null);
+  const vibrationInterval = useRef<number | null>(null);
+
+
+  const [vehiculeStep, setVehiculeStep] = useState(1.2); // index de position simulée
+  const maxStep = 10; // tu peux l'augmenter
+  const [showCallModal, setShowCallModal] = useState(false);
+
+  // Simule la position du véhicule
+  const getVehiculePosition = () => {
+    if (!location) return null;
+    const offset = 0.0002;
+
+    return {
+      latitude: location.coords.latitude + offset * vehiculeStep,
+      longitude: location.coords.longitude + offset * vehiculeStep,
+    };
+  };
 
   useEffect(() => {
     (async () => {
@@ -64,8 +59,7 @@ export default function MapComponent() {
         if (data) setVehicule(data);
       }
 
-      const ip = await AsyncStorage.getItem('esp32_ip');
-      if (ip) setEspIp(ip);
+      setEspIp('http://192.168.43.200');
     })();
   }, []);
 
@@ -98,7 +92,6 @@ export default function MapComponent() {
       );
     })();
   }, []);
-
   const toggleBuzzer = async () => {
     const action = isBuzzerOn ? 'off' : 'on';
     if (!espIp) {
@@ -106,16 +99,32 @@ export default function MapComponent() {
       return;
     }
     const url = espIp.startsWith('http') ? `${espIp}/${action}` : `http://${espIp}/${action}`;
-
+  
     try {
       const response = await fetch(url);
       const text = await response.text();
       console.log(text);
       setIsBuzzerOn(!isBuzzerOn);
+  
+      if (action === 'on') {
+        // ▶️ Démarre vibration en boucle toutes les 2 secondes
+        vibrationInterval.current = setInterval(() => {
+          Vibration.vibrate(1000); // 1s de vibration
+        }, 2000);
+      } else {
+        // ⏹️ Arrête les vibrations
+        if (vibrationInterval.current) {
+          clearInterval(vibrationInterval.current);
+          vibrationInterval.current = null;
+        }
+        Vibration.cancel(); // stoppe la vibration en cours
+      }
     } catch (error) {
       Alert.alert('Erreur', 'Connexion à l’ESP32 impossible. Vérifie le Wi-Fi et l’IP.');
     }
   };
+  
+  
 
   if (!location) {
     return (
@@ -129,6 +138,21 @@ export default function MapComponent() {
   const currentPosition = {
     latitude: location.coords.latitude,
     longitude: location.coords.longitude,
+  };
+
+  const moiPosition = {
+    latitude: currentPosition.latitude + 0.0002,
+    longitude: currentPosition.longitude + 0.0002,
+  };
+
+  const vehiculePosition = getVehiculePosition();
+
+  const avancer = () => {
+    setVehiculeStep((prev) => Math.min(prev + 1, maxStep));
+  };
+
+  const reculer = () => {
+    setVehiculeStep((prev) => Math.max(prev - 1, 0));
   };
 
   return (
@@ -155,28 +179,44 @@ export default function MapComponent() {
         }}
         showsUserLocation={true}
       >
+        {/* Marqueur Moi */}
         <Marker
-          coordinate={currentPosition}
+          coordinate={moiPosition}
           title="Moi"
           description="Position actuelle"
           pinColor="blue"
         />
-        {espLocation && (
+
+        {/* Marqueur Véhicule */}
+        {vehiculePosition && (
           <Marker
-            coordinate={espLocation}
-            title="ESP32"
-            description="Position du véhicule"
+            coordinate={vehiculePosition}
+            title="Véhicule"
+            description="Position simulée"
             pinColor="red"
           />
         )}
-
       </MapView>
 
-      {/* Boutons */}
-      <View style={styles.bottomActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <FontAwesome name="phone" size={24} color="white" />
+      {/* Boutons avancer/reculer */}
+      <View style={styles.leftButtons}>
+        <TouchableOpacity style={styles.navButton} onPress={avancer}>
+          <Text style={styles.navButtonText}>2</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={reculer}>
+          <Text style={styles.navButtonText}>3</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={toggleBuzzer}>
+          <Text style={styles.navButtonText}>7</Text>
+        </TouchableOpacity>
+        
+      </View>
+
+      {/* Boutons buzzer & phone */}
+      <View style={styles.bottomActions}>
+      <TouchableOpacity style={styles.actionButton} onPress={() => setShowCallModal(true)}>
+  <FontAwesome name="phone" size={24} color="white" />
+</TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.actionButton,
@@ -191,6 +231,53 @@ export default function MapComponent() {
           />
         </TouchableOpacity>
       </View>
+      <Modal
+  visible={showCallModal}
+  animationType="slide"
+  transparent
+  onRequestClose={() => setShowCallModal(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalTitle}>Contacter un service</Text>
+
+      <TouchableOpacity
+        style={styles.modalButton}
+        onPress={() => Linking.openURL('tel:117')}
+      >
+        <Text style={styles.modalButtonText}>🚨 Police</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.modalButton}
+        onPress={() => Linking.openURL('tel:113')}
+      >
+        <Text style={styles.modalButtonText}>👮‍♂️ Gendarmerie</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.modalButton}
+      >
+        <Text style={styles.modalButtonText}>📡 TrackSecure</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.modalButton}
+        onPress={() => Linking.openURL('tel:000')}
+      >
+        <Text style={styles.modalButtonText}>📞 Autre numéro</Text>
+      </TouchableOpacity>
+
+      <Pressable
+        style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+        onPress={() => setShowCallModal(false)}
+      >
+        <Text style={[styles.modalButtonText, { color: '#000' }]}>Fermer</Text>
+      </Pressable>
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 }
@@ -260,4 +347,64 @@ const styles = StyleSheet.create({
     borderRadius: 70,
     elevation: 3,
   },
+  leftButtons: {
+    position: 'absolute',
+    bottom: 2, 
+    left: 0,
+    right: 0,
+    flexDirection: 'row', 
+    justifyContent: 'space-evenly', 
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    zIndex: 1000,
+  },
+  navButton: {
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginVertical: 4,
+  },
+  navButtonText: {
+    color: '#fff',
+    fontSize: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10, 
+    padding: 18,      
+    width: 200,
+    alignItems: 'center',
+  },
+  
+  modalTitle: {
+    fontSize: 16,         
+    fontWeight: '600',    
+    marginBottom: 14,     
+  },
+  
+  modalButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 8,   
+    paddingHorizontal: 16, 
+    borderRadius: 6,       
+    marginVertical: 6,     
+    width: 120,
+    alignItems: 'center',
+  },
+  
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 10,         
+    fontWeight: '600',    
+  },
+  
+  
 });
