@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   Alert,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -214,15 +215,15 @@ export default function MapComponent() {
 
       {/* Boutons avancer/reculer */}
       <View style={styles.leftButtons}>
-        <TouchableOpacity style={styles.navButton} onPress={avancer}>
+        <TouchableWithoutFeedback style={styles.navButton} onPress={avancer}>
           <Text style={styles.navButtonText}>2</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={reculer}>
+        </TouchableWithoutFeedback>
+        <TouchableWithoutFeedback style={styles.navButton} onPress={reculer}>
           <Text style={styles.navButtonText}>3</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={toggleBuzzer}>
+        </TouchableWithoutFeedback>
+        <TouchableWithoutFeedback style={styles.navButton} onPress={toggleBuzzer}>
           <Text style={styles.navButtonText}>7</Text>
-        </TouchableOpacity>
+        </TouchableWithoutFeedback>
 
       </View>
 
@@ -381,7 +382,7 @@ const styles = StyleSheet.create({
   },
   navButtonText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 15,
   },
   modalOverlay: {
     flex: 1,

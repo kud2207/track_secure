@@ -258,7 +258,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.trackSecure";
-				PRODUCT_NAME = "trackSecure101";
+				PRODUCT_NAME = "trackSecure312";
 				SWIFT_OBJC_BRIDGING_HEADER = "trackSecure101/trackSecure101-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -287,7 +287,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.anonymous.trackSecure";
-				PRODUCT_NAME = "trackSecure101";
+				PRODUCT_NAME = "trackSecure312";
 				SWIFT_OBJC_BRIDGING_HEADER = "trackSecure101/trackSecure101-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";

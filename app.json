@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "trackSecure 1.0.1",
+    "name": "trackSecure 3.1.2",
     "slug": "trackSecure",
-    "version": "1.4.3",
+    "version": "3.1.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "trackSecure",
@@ -33,7 +33,9 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.anonymous.trackSecure"
     },
@@ -62,6 +64,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "097f9e07-3ce4-4ffb-b35d-aace3683ac1b"
+      }
     }
   }
 }
