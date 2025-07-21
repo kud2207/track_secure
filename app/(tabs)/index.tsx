@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FontAwesome } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
 import { Modal, Pressable, Linking, Vibration } from 'react-native';
-const vibrationInterval = useRef<NodeJS.Timer | null>(null);
+import { Audio } from 'expo-av';
 
 
 
@@ -27,6 +27,7 @@ export default function MapComponent() {
 
   const mapRef = useRef<MapView | null>(null);
   const vibrationInterval = useRef<number | null>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
 
 
   const [vehiculeStep, setVehiculeStep] = useState(1.2); // index de position simulée
@@ -99,18 +100,25 @@ export default function MapComponent() {
       return;
     }
     const url = espIp.startsWith('http') ? `${espIp}/${action}` : `http://${espIp}/${action}`;
-  
+
     try {
       const response = await fetch(url);
       const text = await response.text();
       console.log(text);
       setIsBuzzerOn(!isBuzzerOn);
-  
+
       if (action === 'on') {
         // ▶️ Démarre vibration en boucle toutes les 2 secondes
         vibrationInterval.current = setInterval(() => {
-          Vibration.vibrate(1000); // 1s de vibration
-        }, 2000);
+          Vibration.vibrate(2000); // 1s de vibration
+        }, 4000);
+
+        // Charger et jouer le son en boucle
+        const { sound } = await Audio.Sound.createAsync(
+          require('../../assets/abc.mp3'), // ← adapte ce chemin à ton projet
+          { shouldPlay: true, isLooping: true }
+        );
+        soundRef.current = sound;
       } else {
         // ⏹️ Arrête les vibrations
         if (vibrationInterval.current) {
@@ -118,13 +126,19 @@ export default function MapComponent() {
           vibrationInterval.current = null;
         }
         Vibration.cancel(); // stoppe la vibration en cours
+        // Stop son
+        if (soundRef.current) {
+          await soundRef.current.stopAsync();
+          await soundRef.current.unloadAsync();
+          soundRef.current = null;
+        }
       }
     } catch (error) {
       Alert.alert('Erreur', 'Connexion à l’ESP32 impossible. Vérifie le Wi-Fi et l’IP.');
     }
   };
-  
-  
+
+
 
   if (!location) {
     return (
@@ -209,14 +223,14 @@ export default function MapComponent() {
         <TouchableOpacity style={styles.navButton} onPress={toggleBuzzer}>
           <Text style={styles.navButtonText}>7</Text>
         </TouchableOpacity>
-        
+
       </View>
 
       {/* Boutons buzzer & phone */}
       <View style={styles.bottomActions}>
-      <TouchableOpacity style={styles.actionButton} onPress={() => setShowCallModal(true)}>
-  <FontAwesome name="phone" size={24} color="white" />
-</TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={() => setShowCallModal(true)}>
+          <FontAwesome name="phone" size={24} color="white" />
+        </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.actionButton,
@@ -232,51 +246,51 @@ export default function MapComponent() {
         </TouchableOpacity>
       </View>
       <Modal
-  visible={showCallModal}
-  animationType="slide"
-  transparent
-  onRequestClose={() => setShowCallModal(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalTitle}>Contacter un service</Text>
-
-      <TouchableOpacity
-        style={styles.modalButton}
-        onPress={() => Linking.openURL('tel:117')}
+        visible={showCallModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowCallModal(false)}
       >
-        <Text style={styles.modalButtonText}>🚨 Police</Text>
-      </TouchableOpacity>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Contacter un service</Text>
 
-      <TouchableOpacity
-        style={styles.modalButton}
-        onPress={() => Linking.openURL('tel:113')}
-      >
-        <Text style={styles.modalButtonText}>👮‍♂️ Gendarmerie</Text>
-      </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => Linking.openURL('tel:117')}
+            >
+              <Text style={styles.modalButtonText}>Police</Text>
+            </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.modalButton}
-      >
-        <Text style={styles.modalButtonText}>📡 TrackSecure</Text>
-      </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => Linking.openURL('tel:113')}
+            >
+              <Text style={styles.modalButtonText}>Gendarmerie</Text>
+            </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.modalButton}
-        onPress={() => Linking.openURL('tel:000')}
-      >
-        <Text style={styles.modalButtonText}>📞 Autre numéro</Text>
-      </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+            >
+              <Text style={styles.modalButtonText}>TrackSecure</Text>
+            </TouchableOpacity>
 
-      <Pressable
-        style={[styles.modalButton, { backgroundColor: '#ccc' }]}
-        onPress={() => setShowCallModal(false)}
-      >
-        <Text style={[styles.modalButtonText, { color: '#000' }]}>Fermer</Text>
-      </Pressable>
-    </View>
-  </View>
-</Modal>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => Linking.openURL('tel:000')}
+            >
+              <Text style={styles.modalButtonText}>📞 Autre numéro</Text>
+            </TouchableOpacity>
+
+            <Pressable
+              style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+              onPress={() => setShowCallModal(false)}
+            >
+              <Text style={[styles.modalButtonText, { color: '#000' }]}>Fermer</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );
@@ -349,11 +363,11 @@ const styles = StyleSheet.create({
   },
   leftButtons: {
     position: 'absolute',
-    bottom: 2, 
+    bottom: 2,
     left: 0,
     right: 0,
-    flexDirection: 'row', 
-    justifyContent: 'space-evenly', 
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     paddingHorizontal: 10,
     zIndex: 1000,
@@ -375,36 +389,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   modalContent: {
     backgroundColor: 'white',
-    borderRadius: 10, 
-    padding: 18,      
+    borderRadius: 10,
+    padding: 18,
     width: 200,
     alignItems: 'center',
   },
-  
+
   modalTitle: {
-    fontSize: 16,         
-    fontWeight: '600',    
-    marginBottom: 14,     
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 14,
   },
-  
+
   modalButton: {
     backgroundColor: '#007AFF',
-    paddingVertical: 8,   
-    paddingHorizontal: 16, 
-    borderRadius: 6,       
-    marginVertical: 6,     
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    marginVertical: 6,
     width: 120,
     alignItems: 'center',
   },
-  
+
   modalButtonText: {
     color: '#fff',
-    fontSize: 10,         
-    fontWeight: '600',    
+    fontSize: 10,
+    fontWeight: '600',
   },
-  
-  
+
+
 });
